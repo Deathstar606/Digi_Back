@@ -52,27 +52,59 @@ app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// ✅ Connect to DB once during startup
-connectToDatabase()
-  .then(() => {
-    console.log("✅ Database connected successfully");
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    console.error("Error connecting to DB:", err);
+    res.status(500).json({ error: "Database connection error" });
+  }
+});
 
-    // Only load routes AFTER DB connection
-    app.use("/", index);
-    app.use("/users", users);
-    app.use("/cases", cases);
-    app.use("/people", people);
-    app.use("/send-mail", email);
+app.use("/", index);
+app.use("/users", users);
 
-    const http = require("http");
-    const server = http.createServer(app);
-    server.listen(process.env.PORT || 9000, () => {
-      console.log("🚀 Server running on port", process.env.PORT || 9000);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ Failed to connect to database:", err);
-    process.exit(1); // Stop the app if DB fails
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/cases", cases);
+app.use("/people", people);
+app.use("/send-mail", email);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500);
+  res.render("error", {
+    title: "Error", // Ensure 'title' is defined
+    message: err.message,
+    error: err,
   });
+});
+
+const http = require("http");
+const server = http.createServer(app);
+server.setTimeout(10000); // 10 seconds
+server.listen(process.env.PORT || 9000, () => {
+  console.log("Server listening on port", process.env.PORT || 9000);
+});
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  var err = new Error("Not Found");
+  err.status = 404;
+  next(err);
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get("env") === "development" ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render("error");
+});
 
 module.exports = app;

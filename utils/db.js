@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const MONGODB_URI =
-  "mongodb+srv://digix:Aa01954379684@digidata.ylkfy.mongodb.net/?appName=DigiData"; //process.env.mongoUrl;
+  "mongodb+srv://digix:Aa01954379684@digidata.ylkfy.mongodb.net/?appName=DigiData";
 
 if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI in config");
