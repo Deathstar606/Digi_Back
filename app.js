@@ -6,7 +6,6 @@ const cors = require("cors");
 require("dotenv").config();
 
 const passport = require("passport");
-const session = require("express-session"); // only if you use sessions
 
 const connectToDatabase = require("./utils/db");
 const mongoose = require("mongoose");
